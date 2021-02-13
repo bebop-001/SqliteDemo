@@ -28,12 +28,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         with (binding) {
             customerNameEt.setOnClickListener { l ->
+                customerAddBtn.isEnabled = customerNameEt.text.length > 0
+                        && customerAgeEt.text.length > 0
                 Toast.makeText(this@MainActivity,
                         "customer name:" + (l as EditText).text,
                         Toast.LENGTH_SHORT
                 ).show()
             }
             customerAgeEt.setOnClickListener { l ->
+                customerAddBtn.isEnabled = customerNameEt.text.length > 0
+                        && customerAgeEt.text.length > 0
                 Toast.makeText(this@MainActivity,
                         "customer age:" + (l as EditText).text,
                         Toast.LENGTH_SHORT
@@ -55,11 +59,17 @@ class MainActivity : AppCompatActivity() {
             }
             customerAddBtn.setOnClickListener { l ->
                 val button = l as Button
+                val cm = CustomerModel(-1,
+                    customerNameEt.text.toString(),
+                    customerAgeEt.text.toString().toInt(),
+                    customerActiveSw.isChecked
+                )
                 Toast.makeText(this@MainActivity,
-                        "customer add clicked",
+                        "customer add clicked: $cm",
                         Toast.LENGTH_SHORT
                 ).show()
             }
+
         }
     }
 }
