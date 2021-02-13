@@ -8,6 +8,13 @@ package com.kana_tutor.sqlltdemo
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 
+data class CustomerModel (
+    val id:Int,
+    val name:String,
+    val age:Int,
+    val isActive:Boolean,
+        )
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
