@@ -7,6 +7,12 @@ package com.kana_tutor.sqlltdemo
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Switch
+import android.widget.Toast
+import androidx.appcompat.widget.SwitchCompat
+import com.kana_tutor.sqlltdemo.databinding.ActivityMainBinding
 
 data class CustomerModel (
     val id:Int,
@@ -18,6 +24,42 @@ data class CustomerModel (
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        with (binding) {
+            customerNameEt.setOnClickListener { l ->
+                Toast.makeText(this@MainActivity,
+                        "customer name:" + (l as EditText).text,
+                        Toast.LENGTH_SHORT
+                ).show()
+            }
+            customerAgeEt.setOnClickListener { l ->
+                Toast.makeText(this@MainActivity,
+                        "customer age:" + (l as EditText).text,
+                        Toast.LENGTH_SHORT
+                ).show()
+            }
+            customerActiveSw.setOnClickListener { l ->
+                val sw = l as SwitchCompat
+                Toast.makeText(this@MainActivity,
+                        "customer active:" + sw.isActivated,
+                        Toast.LENGTH_SHORT
+                ).show()
+            }
+            customerShowAllBtn.setOnClickListener { l ->
+                val btn = l as Button
+                Toast.makeText(this@MainActivity,
+                        "customer show all clicked",
+                        Toast.LENGTH_SHORT
+                ).show()
+            }
+            customerAddBtn.setOnClickListener { l ->
+                val button = l as Button
+                Toast.makeText(this@MainActivity,
+                        "customer add clicked",
+                        Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 }

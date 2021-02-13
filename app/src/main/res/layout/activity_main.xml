@@ -34,8 +34,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/customer_name_et" />
 
-    <Button
-        android:id="@+id/customer_active_btn"
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/customer_active_sw"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -47,14 +47,14 @@
         app:layout_constraintTop_toBottomOf="@+id/customer_age_et" />
 
     <Button
-        android:id="@+id/customer_view_all_btn"
+        android:id="@+id/customer_show_all_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/customer_view_all"
         app:layout_constraintEnd_toStartOf="@+id/customer_add_btn"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/customer_active_btn" />
+        app:layout_constraintTop_toBottomOf="@+id/customer_active_sw" />
 
     <Button
         android:id="@+id/customer_add_btn"
@@ -62,8 +62,8 @@
         android:layout_height="wrap_content"
         android:text="@string/customer_add"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/customer_view_all_btn"
-        app:layout_constraintTop_toTopOf="@+id/customer_view_all_btn" />
+        app:layout_constraintStart_toEndOf="@id/customer_show_all_btn"
+        app:layout_constraintTop_toTopOf="@+id/customer_show_all_btn" />
 
     <ListView
         android:id="@+id/customer_lv"
@@ -73,6 +73,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/customer_view_all_btn" />
+        app:layout_constraintTop_toBottomOf="@+id/customer_show_all_btn" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
