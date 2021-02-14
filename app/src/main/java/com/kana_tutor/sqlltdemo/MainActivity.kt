@@ -50,11 +50,9 @@ class DbHelper(context: Context,
     }
 
     /**
-     * Called when the database needs to be upgraded. The implementation
-     * should use this method to drop tables, add tables, or do anything else it
-     * needs to upgrade to the new schema version.
-     *
-     *
+     * Called when the database needs to be upgraded. Use this method
+     * to drop tables, add tables, or do anything else needed to
+     * upgrade to the new schema version.
      *
      * The SQLite ALTER TABLE documentation can be found
      * [here](http://sqlite.org/lang_altertable.html). If you add new columns
@@ -62,10 +60,8 @@ class DbHelper(context: Context,
      * you can use ALTER TABLE to rename the old table, then create the new table and then
      * populate the new table with the contents of the old table.
      *
-     *
-     * This method executes within a transaction.  If an exception is thrown, all changes
-     * will automatically be rolled back.
-     *
+     * This method executes within a transaction.  If an exception is
+     * thrown, all changes are automatically rolled back.
      *
      * @param db The database.
      * @param oldVersion The old database version.
@@ -84,6 +80,7 @@ class DbHelper(context: Context,
         }
         val rv = writableDatabase
             .insert(CUST_TABLE, null, cv)
+        close() // the database.
         return rv != -1L
     }
     fun getAllCustomers() : MutableList<CustomerModel> {
@@ -115,7 +112,7 @@ class MainActivity : AppCompatActivity() {
             customerNameEt.setOnClickListener { l ->
                 customerAddBtn.isEnabled = customerNameEt.text.length > 0
                         && customerAgeEt.text.length > 0
-                Toast.makeText(this@MainActivity,
+                Toast.makeText(this@MainActivity.applicationContext,
                         "customer name:" + (l as EditText).text,
                         Toast.LENGTH_SHORT
                 ).show()
@@ -123,20 +120,23 @@ class MainActivity : AppCompatActivity() {
             customerAgeEt.setOnClickListener { l ->
                 customerAddBtn.isEnabled = customerNameEt.text.length > 0
                         && customerAgeEt.text.length > 0
-                Toast.makeText(this@MainActivity,
+                Toast.makeText(this@MainActivity.applicationContext,
                         "customer age:" + (l as EditText).text,
                         Toast.LENGTH_SHORT
                 ).show()
             }
+            // not really necessary since we just read state of
+            // switch in customerAdd.
             customerActiveSw.setOnClickListener { l ->
                 val sw = l as SwitchCompat
-                Toast.makeText(this@MainActivity,
+                Toast.makeText(this@MainActivity.applicationContext,
                         "customer active:" + sw.isActivated,
                         Toast.LENGTH_SHORT
                 ).show()
             }
             customerShowAllBtn.setOnClickListener {
-                val allCustomers = DbHelper(this@MainActivity).getAllCustomers()
+                val allCustomers =
+                    DbHelper(this@MainActivity.applicationContext).getAllCustomers()
                 Toast.makeText(this@MainActivity,
                         "customer show all clicked\n$allCustomers",
                         Toast.LENGTH_SHORT
@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
                     customerAgeEt.text.toString().toInt(),
                     customerActiveSw.isChecked
                 )
-                val rv = DbHelper(this@MainActivity).addCustomer(cm)
+                val rv = DbHelper(this@MainActivity.applicationContext).addCustomer(cm)
                 Toast.makeText(this@MainActivity,
                         """customer add clicked: 
                             |$cm:
