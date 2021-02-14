@@ -132,6 +132,18 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
+        fun List<CustomerModel>.updateListView() {
+            binding.customerLv.adapter = ArrayAdapter<CustomerModel>(
+                this@MainActivity.applicationContext,
+                android.R.layout.simple_list_item_1,
+                this)
+        }
+        run {
+            val db = DbHelper(this@MainActivity.applicationContext)
+            db.getAllCustomers().updateListView()
+            db.close()
+        }
+
         setContentView(binding.root)
         with (binding) {
             customerNameEt.setOnClickListener { l ->
@@ -163,10 +175,7 @@ class MainActivity : AppCompatActivity() {
                 val db = DbHelper(this@MainActivity.applicationContext)
                 val allCustomers = db.getAllCustomers()
                 db.close()
-                binding.customerLv.adapter = ArrayAdapter<CustomerModel>(
-                    this@MainActivity.applicationContext,
-                    android.R.layout.simple_list_item_1,
-                    allCustomers)
+                allCustomers.updateListView()
             }
             customerAddBtn.setOnClickListener {
                 val db = DbHelper(this@MainActivity.applicationContext)
@@ -178,9 +187,13 @@ class MainActivity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
                 else {
-                    val rv = db.addCustomer(
-                        CustomerModel(-1, name, age, customerActiveSw.isChecked)
-                    )
+                    val cm = CustomerModel(-1, name, age, customerActiveSw.isChecked)
+                    if (db.addCustomer(cm)) {
+                        db.getAllCustomers().updateListView()
+                        binding.customerNameEt.setText("")
+                        binding.customerAgeEt.setText("")
+                    }
+                    else Log.d("customerAdd", "Failed to add:$cm")
                 }
                 db.close()
             }
