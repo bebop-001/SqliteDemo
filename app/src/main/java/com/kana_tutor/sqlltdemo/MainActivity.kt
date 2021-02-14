@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.widget.SwitchCompat
@@ -162,10 +163,10 @@ class MainActivity : AppCompatActivity() {
                 val db = DbHelper(this@MainActivity.applicationContext)
                 val allCustomers = db.getAllCustomers()
                 db.close()
-                Toast.makeText(this@MainActivity,
-                        "customer show all clicked\n$allCustomers",
-                        Toast.LENGTH_SHORT
-                ).show()
+                binding.customerLv.adapter = ArrayAdapter<CustomerModel>(
+                    this@MainActivity.applicationContext,
+                    android.R.layout.simple_list_item_1,
+                    allCustomers)
             }
             customerAddBtn.setOnClickListener {
                 val db = DbHelper(this@MainActivity.applicationContext)
