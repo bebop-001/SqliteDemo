@@ -7,6 +7,7 @@ package com.kana_tutor.sqlltdemo
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import androidx.appcompat.app.AppCompatActivity
@@ -78,15 +79,27 @@ class DbHelper(context: Context,
     }
 
     fun addCustomer(customerModel: CustomerModel) : Boolean {
-        val db = this.writableDatabase
         val cv = ContentValues()
         with (customerModel) {
             cv.put(COL_NAME, name)
             cv.put(COL_AGE, age)
             cv.put(COL_ACTIVE, isActive)
         }
-        val rv = db.insert(CUST_TABLE, null, cv)
+        val rv = writableDatabase
+            .insert(CUST_TABLE, null, cv)
         return rv != -1L
+    }
+    fun getAllCustomers() : MutableList<CustomerModel> {
+        val queryString = """SELECT * FROM $CUST_TABLE;"""
+        val cursor = readableDatabase.rawQuery(queryString,null)
+        val rv = (1..cursor.count).map{
+            val c = cursor.move(it)
+            CustomerModel(cursor.getInt(0),
+                cursor.getString(1),
+                cursor.getInt(2),
+                if (cursor.getInt(3) == 1) true else false)
+        }.toMutableList()
+        return rv
     }
 
     constructor(context: Context) :
@@ -125,8 +138,9 @@ class MainActivity : AppCompatActivity() {
             }
             customerShowAllBtn.setOnClickListener { l ->
                 val btn = l as Button
+                val allCustomers = DbHelper(this@MainActivity).getAllCustomers()
                 Toast.makeText(this@MainActivity,
-                        "customer show all clicked",
+                        "customer show all clicked\n$allCustomers",
                         Toast.LENGTH_SHORT
                 ).show()
             }
