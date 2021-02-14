@@ -7,14 +7,11 @@ package com.kana_tutor.sqlltdemo
 
 import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
 import android.widget.EditText
-import android.widget.Switch
 import android.widget.Toast
 import androidx.appcompat.widget.SwitchCompat
 import com.kana_tutor.sqlltdemo.databinding.ActivityMainBinding
@@ -92,13 +89,15 @@ class DbHelper(context: Context,
     fun getAllCustomers() : MutableList<CustomerModel> {
         val queryString = """SELECT * FROM $CUST_TABLE;"""
         val cursor = readableDatabase.rawQuery(queryString,null)
-        val rv = (1..cursor.count).map{
-            val c = cursor.move(it)
+        val rv = (0..(cursor.count - 1)).map{
+            cursor.moveToPosition(it)
             CustomerModel(cursor.getInt(0),
                 cursor.getString(1),
                 cursor.getInt(2),
                 if (cursor.getInt(3) == 1) true else false)
         }.toMutableList()
+        cursor.close()
+        close() // the database.
         return rv
     }
 
@@ -136,16 +135,14 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                 ).show()
             }
-            customerShowAllBtn.setOnClickListener { l ->
-                val btn = l as Button
+            customerShowAllBtn.setOnClickListener {
                 val allCustomers = DbHelper(this@MainActivity).getAllCustomers()
                 Toast.makeText(this@MainActivity,
                         "customer show all clicked\n$allCustomers",
                         Toast.LENGTH_SHORT
                 ).show()
             }
-            customerAddBtn.setOnClickListener { l ->
-                val button = l as Button
+            customerAddBtn.setOnClickListener {
                 val cm = CustomerModel(-1,
                     customerNameEt.text.toString(),
                     customerAgeEt.text.toString().toInt(),
