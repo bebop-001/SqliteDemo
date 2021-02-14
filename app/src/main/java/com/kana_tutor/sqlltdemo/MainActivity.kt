@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.widget.SwitchCompat
@@ -80,7 +81,6 @@ class DbHelper(context: Context,
         }
         val rv = writableDatabase
             .insert(CUST_TABLE, null, cv)
-        close() // the database.
         return rv != -1L
     }
     fun getAllCustomers() : MutableList<CustomerModel> {
@@ -94,8 +94,32 @@ class DbHelper(context: Context,
                 if (cursor.getInt(3) == 1) true else false)
         }.toMutableList()
         cursor.close()
-        close() // the database.
         return rv
+    }
+    fun getCustomer(name:String, age:Int) : CustomerModel? {
+        val queryString = """SELECT * FROM $CUST_TABLE
+            |WHERE $COL_NAME = '$name' AND $COL_AGE = $age;
+            |""".trimMargin()
+        val cursor = readableDatabase.rawQuery(queryString, null)
+        val matches = mutableListOf<CustomerModel>()
+        for(i in 0..cursor.count - 1) {
+            cursor.moveToPosition(i)
+            matches.add(CustomerModel(
+                cursor.getInt(0),
+                cursor.getString(1),
+                cursor.getInt(2),
+                if (cursor.getInt(3) == 1) true else false
+            ))
+        }
+        cursor.close()
+        if (matches.size > 1)
+            Log.d(
+                "DbHelper",
+                """getCustomer: multiple matches for \"$name:$age\"
+                    |  Found:$matches
+                """.trimMargin("|")
+            )
+        return if (matches.size == 1) matches[0] else null
     }
 
     constructor(context: Context) :
@@ -135,29 +159,30 @@ class MainActivity : AppCompatActivity() {
                 ).show()
             }
             customerShowAllBtn.setOnClickListener {
-                val allCustomers =
-                    DbHelper(this@MainActivity.applicationContext).getAllCustomers()
+                val db = DbHelper(this@MainActivity.applicationContext)
+                val allCustomers = db.getAllCustomers()
+                db.close()
                 Toast.makeText(this@MainActivity,
                         "customer show all clicked\n$allCustomers",
                         Toast.LENGTH_SHORT
                 ).show()
             }
             customerAddBtn.setOnClickListener {
-                val cm = CustomerModel(-1,
-                    customerNameEt.text.toString(),
-                    customerAgeEt.text.toString().toInt(),
-                    customerActiveSw.isChecked
-                )
-                val rv = DbHelper(this@MainActivity.applicationContext).addCustomer(cm)
-                Toast.makeText(this@MainActivity,
-                        """customer add clicked: 
-                            |$cm:
-                            |${if(rv)"Success" else "Fail"}
-                            |""".trimMargin("|"),
-                        Toast.LENGTH_SHORT
+                val db = DbHelper(this@MainActivity.applicationContext)
+                val name = customerNameEt.text.toString()
+                val age = customerAgeEt.text.toString().toInt()
+                if (db.getCustomer(name,age) != null)
+                    Toast.makeText(this@MainActivity,
+                    "Customer is already in database.",
+                    Toast.LENGTH_SHORT
                 ).show()
+                else {
+                    val rv = db.addCustomer(
+                        CustomerModel(-1, name, age, customerActiveSw.isChecked)
+                    )
+                }
+                db.close()
             }
-
         }
     }
 }
