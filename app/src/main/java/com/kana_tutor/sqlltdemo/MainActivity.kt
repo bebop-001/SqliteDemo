@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
+@file:Suppress("PropertyName", "unused", "PrivatePropertyName")
+
 package com.kana_tutor.sqlltdemo
 // SQLite Database for Android - Full Course
 // same as course but in kotlin.
 // https://www.youtube.com/watch?v=312RhjfetP8
-// goal is to setup sqllite db, query, add, and
+// goal is to setup sqlite db, query, add, and
 // delete items.
 
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -35,6 +37,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.widget.doAfterTextChanged
 import com.kana_tutor.sqlltdemo.databinding.ActivityMainBinding
+import com.kana_tutor.utils.copyFileFromAssets
+import java.io.File
 
 
 data class CustomerModel(
@@ -49,11 +53,11 @@ class DbHelper(
     factory: SQLiteDatabase.CursorFactory?,
     version: Int
 ) : SQLiteOpenHelper(context, name, factory, version) {
-    val CUST_TABLE = "CUSTOMER_TABLE"
-    val COL_NAME = "COLUMN_CUSTOMER_NAME"
-    val COL_AGE = "COLUMN_CUSTOMER_AGE"
-    val COL_ACTIVE = "COLUMN_CUSTOMER_ACTIVER"
-    val COL_ID  = "ID"
+    private val CUST_TABLE = "CUSTOMER_TABLE"
+    private val COL_NAME = "COLUMN_CUSTOMER_NAME"
+    private val COL_AGE = "COLUMN_CUSTOMER_AGE"
+    private val COL_ACTIVE = "COLUMN_CUSTOMER_ACTIVE"
+    private val COL_ID  = "ID"
 
     /**
      * Called when the database is created for the first time. This is where the
@@ -107,13 +111,13 @@ class DbHelper(
     fun getAllCustomers() : MutableList<CustomerModel> {
         val queryString = """SELECT * FROM $CUST_TABLE;"""
         val cursor = readableDatabase.rawQuery(queryString, null)
-        val rv = (0..(cursor.count - 1)).map{
+        val rv = (0 until cursor.count).map{
             cursor.moveToPosition(it)
             CustomerModel(
                 cursor.getInt(0),
                 cursor.getString(1),
                 cursor.getInt(2),
-                if (cursor.getInt(3) == 1) true else false
+                cursor.getInt(3) == 1
             )
         }.toMutableList()
         cursor.close()
@@ -125,14 +129,14 @@ class DbHelper(
             |""".trimMargin()
         val cursor = readableDatabase.rawQuery(queryString, null)
         val matches = mutableListOf<CustomerModel>()
-        for(i in 0..cursor.count - 1) {
+        for(i in 0 until cursor.count) {
             cursor.moveToPosition(i)
             matches.add(
                 CustomerModel(
                     cursor.getInt(0),
                     cursor.getString(1),
                     cursor.getInt(2),
-                    if (cursor.getInt(3) == 1) true else false
+                    cursor.getInt(3) == 1
                 )
             )
         }
@@ -146,8 +150,10 @@ class DbHelper(
             )
         return if (matches.size == 1) matches[0] else null
     }
+    private
     fun deleteCustomer(customer: CustomerModel) =
         deleteCustomer(customer.name, customer.age)
+    @SuppressLint("Recycle")
     fun deleteCustomer(name: String, age: Int) : Boolean {
         val db = this.writableDatabase
         val queryString = """DELETE FROM $CUST_TABLE
@@ -155,7 +161,7 @@ class DbHelper(
             |AND $COL_AGE = $age;
             |""".trimMargin()
         val nRecords = db.rawQuery("SELECT * FROM $CUST_TABLE;", null).count
-        val x = db.rawQuery(queryString, null).count
+        db.rawQuery(queryString, null).count
         val nRecords2 = db.rawQuery("SELECT * FROM $CUST_TABLE;", null).count
         Log.d("DbHelper", "deleteCustomer:${nRecords - nRecords2} records deleted.")
         db.close()
@@ -172,9 +178,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         fun List<CustomerModel>.updateListView() {
-            binding.customerLv.adapter = ArrayAdapter<CustomerModel>(
+            binding.customerLv.adapter = ArrayAdapter(
                 this@MainActivity.applicationContext,
-                android.R.layout.simple_list_item_1,
+                R.layout.tv,
                 this
             )
         }
@@ -189,13 +195,24 @@ class MainActivity : AppCompatActivity() {
             val name = binding.customerNameEt.text.toString()
             val ageString = binding.customerAgeEt.text.toString()
             binding.customerDeleteBtn.isEnabled =
-                ageString.length > 0 && name.length > 0
+                ageString.isNotEmpty() && name.isNotEmpty()
                     && DbHelper(this@MainActivity.applicationContext)
                     .getCustomer(name, ageString.toInt()) != null
             binding.customerAddBtn.isEnabled =
-                ageString.length > 0 && name.length > 0
+                ageString.isNotEmpty() && name.isNotEmpty()
                     && DbHelper(this@MainActivity.applicationContext)
                     .getCustomer(name, ageString.toInt()) == null
+        }
+        val appHome = File(filesDir, "../")
+        val prefs = getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE)
+        if (prefs.getLong("firstRunTimestamp", 0L) == 0L) {
+            copyFileFromAssets(
+                "db/customer.sqlite",
+                "$appHome/databases/customer.sqlite",
+                true)
+            prefs.edit()
+                .putLong("firstRunTimestamp", System.currentTimeMillis())
+                .apply()
         }
         run {
             val db = DbHelper(this@MainActivity.applicationContext)
