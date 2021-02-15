@@ -6,14 +6,11 @@ import java.io.*
 
 @Throws(IOException::class)
 fun Context.copyFileFromAssets(nameIn:String, nameOut:String, force:Boolean = false) {
-    /*
     if (File(nameOut).exists() && !force) {
         throw IOException("""copyFileFromAssets:destination file $nameOut exists.
             |Please set \"force\" to overwrite.
         """.trimMargin())
     }
-
-     */
     val outDirs = nameOut.trim().split("/+".toRegex()).toMutableList()
     if(outDirs.size == 1) throw IOException(
         "copyFileFromAssetes:path \"$nameOut\" must include directory"
@@ -38,8 +35,4 @@ fun Context.copyFileFromAssets(nameIn:String, nameOut:String, force:Boolean = fa
     destination.close()
     source.close()
     Log.d("copyFileFromAssets", "wrote $destSize bytes.")
-}
-
-class Utils {
-
 }

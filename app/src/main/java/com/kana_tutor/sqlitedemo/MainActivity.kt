@@ -215,24 +215,18 @@ class MainActivity : AppCompatActivity() {
                 .putLong("firstRunTimestamp", System.currentTimeMillis())
                 .apply()
         }
+        setContentView(binding.root)
         run {
             val db = DbHelper(this@MainActivity.applicationContext)
             db.getAllCustomers().updateListView()
             db.close()
         }
-        setContentView(binding.root)
         enableButtons()
         with(binding) {
             // name/age edit text to listeners so they check input on each
             // key touch and update enable/disable for buttons.
-            customerNameEt.doAfterTextChanged { l ->
-                Log.d("xxx", "$l:\"${customerNameEt.text}\"")
-                enableButtons()
-            }
-            customerAgeEt.doAfterTextChanged { l ->
-                Log.d("xxx", "$l:\"${customerAgeEt.text}\"")
-                enableButtons()
-            }
+            customerNameEt.doAfterTextChanged  { enableButtons() }
+            customerAgeEt.doAfterTextChanged   { enableButtons() }
             // not really necessary since we just read state of
             // switch in customerAdd.
             customerActiveSw.setOnClickListener { l ->
@@ -292,6 +286,7 @@ class MainActivity : AppCompatActivity() {
                 val customer = parent.getItemAtPosition(position) as CustomerModel
                 customerNameEt.setText(customer.name)
                 customerAgeEt.setText(customer.age.toString())
+                customerActiveSw.isChecked = customer.isActive
                 enableButtons()
                 hideKeyboard()
             }
