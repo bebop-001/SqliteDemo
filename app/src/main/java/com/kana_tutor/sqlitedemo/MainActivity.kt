@@ -204,11 +204,12 @@ class MainActivity : AppCompatActivity() {
                     .getCustomer(name, ageString.toInt()) == null
         }
         val appHome = File(filesDir, "../")
+        val databaseDir = File(appHome, "/databases")
         val prefs = getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE)
         if (prefs.getLong("firstRunTimestamp", 0L) == 0L) {
             copyFileFromAssets(
                 "db/customer.sqlite",
-                "$appHome/databases/customer.sqlite",
+                "$databaseDir/customer.sqlite",
                 true)
             prefs.edit()
                 .putLong("firstRunTimestamp", System.currentTimeMillis())
