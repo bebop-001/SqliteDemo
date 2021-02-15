@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021 Steven Smith kana-tutor.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.kana_tutor.sqlltdemo
 // SQLite Database for Android - Full Course
 // same as course but in kotlin.
@@ -150,16 +166,6 @@ class DbHelper(
             this(context, "customer.sqlite", null, 1)
 
 }
-
-fun hideSoftKeyboard(activity: Activity) {
-    val inputMethodManager = activity.getSystemService(
-        Activity.INPUT_METHOD_SERVICE
-    ) as InputMethodManager
-    inputMethodManager.hideSoftInputFromWindow(
-        activity.currentFocus!!.windowToken, 0
-    )
-}
-
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
