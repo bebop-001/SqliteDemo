@@ -6,4 +6,5 @@
     <string name="customer_active">Active</string>
     <string name="customer_view_all">All</string>
     <string name="customer_add">Add</string>
+    <string name="customer_delete">Delete</string>
 </resources>

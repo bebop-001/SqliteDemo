@@ -4,6 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     tools:context=".MainActivity">
 
     <EditText
@@ -67,9 +69,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/customer_add"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/customer_delete_btn"
         app:layout_constraintStart_toEndOf="@id/customer_show_all_btn"
         app:layout_constraintTop_toTopOf="@+id/customer_show_all_btn" />
+
+
+    <Button
+        android:id="@+id/customer_delete_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/customer_delete"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/customer_add_btn"
+        app:layout_constraintTop_toTopOf="@+id/customer_show_all_btn"
+        />
 
     <ListView
         android:id="@+id/customer_lv"
