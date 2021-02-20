@@ -23,6 +23,41 @@
     android:focusableInTouchMode="true"
     tools:context=".MainActivity">
 
+    <com.kana_tutor.utils.SearchWindow
+        android:id="@+id/customer_name_search"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="6dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/white"
+        android:hint="@string/customer_name_search_hint"
+        android:inputType="text"
+        android:padding="3dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="Autofill" />
+
+    <com.kana_tutor.utils.SearchWindow
+        android:id="@+id/customer_age_search"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="6dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/white"
+        android:hint="@string/customer_age_search_hint"
+        android:inputType="text"
+        android:padding="3dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/black"
+        android:ems="10"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/customer_name_search"
+        tools:ignore="Autofill" />
+
     <EditText
         android:id="@+id/customer_name_et"
         android:enabled="true"
@@ -36,7 +71,8 @@
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/customer_age_search"
+        />
 
     <EditText
         android:id="@+id/customer_age_et"

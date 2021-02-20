@@ -30,6 +30,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Toast
@@ -223,6 +224,13 @@ class MainActivity : AppCompatActivity() {
         }
         enableButtons()
         with(binding) {
+            // Search window callbacks.
+            customerNameSearch.setSearchOnClick{view : View, textIn : String ->
+                Log.d("name search", "text = \"$textIn")
+            }
+            customerAgeSearch.setSearchOnClick{view : View, textIn : String ->
+                Log.d("age search", "text = \"$textIn")
+            }
             // name/age edit text to listeners so they check input on each
             // key touch and update enable/disable for buttons.
             customerNameEt.doAfterTextChanged  { enableButtons() }
@@ -282,7 +290,7 @@ class MainActivity : AppCompatActivity() {
                 enableButtons()
                 hideKeyboard()
             }
-            customerLv.setOnItemClickListener { parent, view, position, id ->
+            customerLv.setOnItemClickListener { parent, _, position, _ ->
                 val customer = parent.getItemAtPosition(position) as CustomerModel
                 customerNameEt.setText(customer.name)
                 customerAgeEt.setText(customer.age.toString())

@@ -1,10 +1,16 @@
 <resources>
     <string name="app_name">SqliteDemo</string>
 
+
+    <string name="customer_name_search_hint">like \"^fre.*y$\"</string>
+    <string name="customer_age_search_hint">like \">= 15\"</string>
     <string name="customer_name">Name</string>
     <string name="customer_age">Age</string>
     <string name="customer_active">Active</string>
     <string name="customer_view_all">All</string>
     <string name="customer_add">Add</string>
     <string name="customer_delete">Delete</string>
+
+    <string name="search_clear">Search Clear</string>
+    <string name="start_search">Start Search</string>
 </resources>
