@@ -24,18 +24,26 @@ package com.kana_tutor.sqlltdemo
 // delete items.
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.widget.doAfterTextChanged
 import com.kana_tutor.sqlltdemo.databinding.ActivityMainBinding
 import com.kana_tutor.utils.copyFileFromAssets
@@ -55,9 +63,9 @@ class DbHelper(
     version: Int
 ) : SQLiteOpenHelper(context, name, factory, version) {
     private val CUST_TABLE = "CUSTOMER_TABLE"
-    private val COL_NAME = "COLUMN_CUSTOMER_NAME"
-    private val COL_AGE = "COLUMN_CUSTOMER_AGE"
-    private val COL_ACTIVE = "COLUMN_CUSTOMER_ACTIVE"
+    private val COL_NAME = "NAME"
+    private val COL_AGE = "AGE"
+    private val COL_ACTIVE = "ACTIVE"
     private val COL_ID  = "ID"
 
     /**
@@ -67,13 +75,26 @@ class DbHelper(
      * @param db The database.
      */
     override fun onCreate(db: SQLiteDatabase?) {
-        val createSqlTable = """CREATE TABLE $CUST_TABLE (
-            $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-            $COL_NAME TEXT,
-            $COL_AGE INT,
-            $COL_ACTIVE BOOL
-            )"""
-        db!!.execSQL(createSqlTable)
+        try {
+            val createSqlTable =
+                """CREATE TABLE IF NOT EXISTS $CUST_TABLE (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_NAME TEXT,
+                $COL_AGE INT,
+                $COL_ACTIVE BOOL
+                )"""
+            db!!.execSQL(createSqlTable)
+        }
+        catch (e:SQLiteException) {
+            val asList = e.message?.
+                split("\n")?.
+                toList()
+                ?: listOf("unknown")
+            val errors = asList.filter{"^(Error Code|Caused By)".toRegex(RegexOption.IGNORE_CASE).find(it) != null}
+            throw SQLiteException("""SQLiteOpenHelper:onCreate:
+                |${errors.joinToString("\n")}
+                |""".trimMargin("|"))
+        }
     }
 
     /**
@@ -122,6 +143,34 @@ class DbHelper(
             )
         }.toMutableList()
         cursor.close()
+        return rv
+    }
+    fun getCustomers(sqlRegex:String) : MutableList<CustomerModel> {
+        val sqlQuery = """
+            SELECT * from CUSTOMER_TABLE
+            WHERE $sqlRegex;
+        """.trimIndent()
+        val rv: MutableList<CustomerModel>
+        try {
+            val cursor = readableDatabase.rawQuery(sqlQuery, null)
+            rv = (0 until cursor.count).map {
+                cursor.moveToPosition(it)
+                CustomerModel(
+                    cursor.getInt(0),
+                    cursor.getString(1),
+                    cursor.getInt(2),
+                    cursor.getInt(3) == 1
+                )
+            }.toMutableList()
+        }
+        catch (e: SQLiteException) {
+            val asList = e.message?.split("\n")?.toList()
+                ?: listOf("unknown")
+            val errors = asList.filter { "^(Error Code|Caused By)".toRegex(RegexOption.IGNORE_CASE).find(it) != null }
+            throw SQLiteException("""SQLiteOpenHelper:onCreate:
+                |${errors.joinToString("\n")}
+                |""".trimMargin("|"))
+        }
         return rv
     }
     fun getCustomer(name: String, age: Int) : CustomerModel? {
@@ -174,6 +223,16 @@ class DbHelper(
 
 }
 
+fun Activity.webViewAlert (webView : WebView, title:String) {
+    androidx.appcompat.app.AlertDialog.Builder(this)
+        .setTitle(title)
+        .setView(webView)
+        .setNegativeButton(R.string.done,
+            {dialogInterface, _ -> dialogInterface.dismiss()})
+        .setCancelable(false)
+        .show()
+}
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -204,6 +263,28 @@ class MainActivity : AppCompatActivity() {
                     && DbHelper(this@MainActivity.applicationContext)
                     .getCustomer(name, ageString.toInt()) == null
         }
+
+        fun showSearchHelp() : Boolean {
+            val webView = WebView(this)
+            webView.webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+                    Log.i("WebView", "Attempting to load URL: $url")
+                    // if external link, start with a browser.  Should only hit
+                    // from the about google play link.
+                    if (url.startsWith("https://") || url.startsWith("http://")) {
+                        val i = Intent(Intent.ACTION_VIEW)
+                        i.data = Uri.parse(url)
+                        startActivity(i)
+                    }
+                    else
+                        view.loadUrl(url)
+                    return true
+                }
+            }
+            webView.loadUrl("file:///android_asset/html/SqlRegexHelp.html")
+            webViewAlert(webView, "SQL Search Help")
+            return true
+        }
         val appHome = File(filesDir, "../")
         val databaseDir = File(appHome, "/databases")
         val prefs = getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE)
@@ -214,10 +295,12 @@ class MainActivity : AppCompatActivity() {
                 true)
             prefs.edit()
                 .putLong("firstRunTimestamp", System.currentTimeMillis())
-                .apply()
+                .commit()
+            Log.d("onCreate", "copyFileFromAssets complete")
         }
         setContentView(binding.root)
         run {
+            Log.d("onCreate", "Start db")
             val db = DbHelper(this@MainActivity.applicationContext)
             db.getAllCustomers().updateListView()
             db.close()
@@ -225,11 +308,18 @@ class MainActivity : AppCompatActivity() {
         enableButtons()
         with(binding) {
             // Search window callbacks.
-            customerNameSearch.setSearchOnClick{view : View, textIn : String ->
+            customerSearch.setSearchOnClick{view : View, textIn : String ->
                 Log.d("name search", "text = \"$textIn")
+
+                val db = DbHelper(this@MainActivity.applicationContext)
+                val selectedCustomers = db.getCustomers("AGE > 30")
+                db.close()
+                selectedCustomers.updateListView()
             }
-            customerAgeSearch.setSearchOnClick{view : View, textIn : String ->
-                Log.d("age search", "text = \"$textIn")
+            customerSearch.searchET.setOnLongClickListener {
+                Log.d("onlongclick", "clicked")
+                showSearchHelp()
+                true
             }
             // name/age edit text to listeners so they check input on each
             // key touch and update enable/disable for buttons.
