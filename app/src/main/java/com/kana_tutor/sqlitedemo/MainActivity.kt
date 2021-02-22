@@ -312,7 +312,8 @@ class MainActivity : AppCompatActivity() {
                 Log.d("name search", "text = \"$textIn")
 
                 val db = DbHelper(this@MainActivity.applicationContext)
-                val selectedCustomers = db.getCustomers("AGE > 30")
+                val selectedCustomers = db.getCustomers(
+                    "(NAME like 'M%' OR NAME like '%a') AND NOT AGE > 30")
                 db.close()
                 selectedCustomers.updateListView()
             }

@@ -4,7 +4,7 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
         <style type="text/css">
             body {
-                font-size:12px;
+                font-size:14px;
                 font-family: Arial;
                 background-color: Ivory;
                 color: Black;
@@ -16,12 +16,16 @@
                 padding-right: 2px;
                 text-indent: 40px;
             }
-            h1 { font-weight: bold; font-size:18px; }
-            h2 { font-weight: bold; font-size:14px; }
-            h3 { font-size:12px; }
+            h1 { font-weight: bold; font-size:20px; }
+            h2 { font-weight: bold; font-size:16px; }
+            h3 { font-size:14px; }
         </style>
     </head>
 <body>
+<p>For a discussion of
+<a href="https://www.sqlite.org/lang_expr.html">
+SQLite's version of syntax, please visit
+</a>.
 <p>This app supports some SQL regular expressions and also allows you
 to select integers.
 <ul>
@@ -29,7 +33,8 @@ to select integers.
     an Int.</li>
     <li>Boolean: AND, OR, NOT: conditions can be connected using these values.
     For example, "NOT AGE = 30" will find all cards for which the customer's
-    age is not 30.</li>
+    age is not 30.  These operators do have a precedence of evaluation, so
+    use parentheses '()' if you have any doubt.</li>
 </ul>
 
 </body>

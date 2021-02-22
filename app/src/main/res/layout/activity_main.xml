@@ -23,7 +23,7 @@
     android:focusableInTouchMode="true"
     tools:context=".MainActivity">
 
-    <com.kana_tutor.utils.SearchWindow
+    <com.kana_tutor.utils.searchwindow.SearchWindow
         android:id="@+id/customer_search"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
