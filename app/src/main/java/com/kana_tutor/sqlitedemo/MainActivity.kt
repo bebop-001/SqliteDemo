@@ -66,7 +66,7 @@ class DbHelper(
     private val COL_NAME = "NAME"
     private val COL_AGE = "AGE"
     private val COL_ACTIVE = "ACTIVE"
-    private val COL_ID  = "ID"
+    private val COL_ID = "ID"
 
     /**
      * Called when the database is created for the first time. This is where the
@@ -85,12 +85,10 @@ class DbHelper(
                 )"""
             db!!.execSQL(createSqlTable)
         }
-        catch (e:SQLiteException) {
-            val asList = e.message?.
-                split("\n")?.
-                toList()
+        catch (e: SQLiteException) {
+            val asList = e.message?.split("\n")?.toList()
                 ?: listOf("unknown")
-            val errors = asList.filter{"^(Error Code|Caused By)".toRegex(RegexOption.IGNORE_CASE).find(it) != null}
+            val errors = asList.filter { "^(Error Code|Caused By)".toRegex(RegexOption.IGNORE_CASE).find(it) != null }
             throw SQLiteException("""SQLiteOpenHelper:onCreate:
                 |${errors.joinToString("\n")}
                 |""".trimMargin("|"))
@@ -119,7 +117,7 @@ class DbHelper(
         TODO("Not yet implemented")
     }
 
-    fun addCustomer(customerModel: CustomerModel) : Boolean {
+    fun addCustomer(customerModel: CustomerModel): Boolean {
         val cv = ContentValues()
         with(customerModel) {
             cv.put(COL_NAME, name)
@@ -130,10 +128,11 @@ class DbHelper(
             .insert(CUST_TABLE, null, cv)
         return rv != -1L
     }
-    fun getAllCustomers() : MutableList<CustomerModel> {
+
+    fun getAllCustomers(): MutableList<CustomerModel> {
         val queryString = """SELECT * FROM $CUST_TABLE;"""
         val cursor = readableDatabase.rawQuery(queryString, null)
-        val rv = (0 until cursor.count).map{
+        val rv = (0 until cursor.count).map {
             cursor.moveToPosition(it)
             CustomerModel(
                 cursor.getInt(0),
@@ -145,11 +144,7 @@ class DbHelper(
         cursor.close()
         return rv
     }
-    fun getCustomers(sqlRegex:String) : MutableList<CustomerModel> {
-        val sqlQuery = """
-            SELECT * from CUSTOMER_TABLE
-            WHERE $sqlRegex;
-        """.trimIndent()
+    private fun getCustomersFromSql(sqlQuery:String) : MutableList<CustomerModel> {
         val rv: MutableList<CustomerModel>
         try {
             val cursor = readableDatabase.rawQuery(sqlQuery, null)
@@ -172,6 +167,21 @@ class DbHelper(
                 |""".trimMargin("|"))
         }
         return rv
+    }
+    fun getCustomersSimpleSearch(customerName: String
+    ) : MutableList<CustomerModel> {
+        val sqlQuery = """
+            |SELECT * from CUSTOMER_TABLE
+            |WHERE NAME LIKE '%$customerName%';""".trimMargin("|")
+        return getCustomersFromSql(sqlQuery)
+    }
+    fun getCustomers(sqlRegex:String) : MutableList<CustomerModel> {
+        val sqlQuery = """
+            |SELECT * from CUSTOMER_TABLE
+            |WHERE $sqlRegex;
+        """.trimIndent()
+
+        return getCustomersFromSql(sqlQuery)
     }
     fun getCustomer(name: String, age: Int) : CustomerModel? {
         val queryString = """SELECT * FROM $CUST_TABLE
@@ -309,11 +319,13 @@ class MainActivity : AppCompatActivity() {
         with(binding) {
             // Search window callbacks.
             customerSearch.setSearchOnClick{view : View, textIn : String ->
-                Log.d("name search", "text = \"$textIn")
+                Log.d("name search", "setSearchOnClick text = \"$textIn")
 
                 val db = DbHelper(this@MainActivity.applicationContext)
-                val selectedCustomers = db.getCustomers(
+                /* val selectedCustomers = db.getCustomers(
                     "(NAME like 'M%' OR NAME like '%a') AND NOT AGE > 30")
+                 */
+                val selectedCustomers = db.getCustomersSimpleSearch(textIn)
                 db.close()
                 selectedCustomers.updateListView()
             }
@@ -321,6 +333,9 @@ class MainActivity : AppCompatActivity() {
                 Log.d("onlongclick", "clicked")
                 showSearchHelp()
                 true
+            }
+            customerSearch.setSearchOnTouch { view: View, textIn: String ->
+                Log.d("name search", "setSearchOnTouch text = \"$textIn")
             }
             // name/age edit text to listeners so they check input on each
             // key touch and update enable/disable for buttons.

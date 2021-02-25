@@ -1,3 +1,5 @@
 include ':searchwindow-debug'
+include ':searchwindow-debug'
+include ':searchwindow-debug'
 include ':app'
 rootProject.name = "SqliteDemo"
