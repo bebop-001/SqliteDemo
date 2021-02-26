@@ -14,4 +14,12 @@
     <string name="search_clear">Search Clear</string>
     <string name="start_search">Start Search</string>
     <string name="done">Done</string>
+
+    <string name="simple_search">Simple Name Search</string>
+    <string name="sql_search">SQL Search</string>
+
+    <string-array name="search_types">
+        <item>@string/simple_search</item>
+        <item>@string/sql_search</item>
+    </string-array>
 </resources>

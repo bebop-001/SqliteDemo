@@ -34,12 +34,13 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent.ACTION_DOWN
+import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.ArrayAdapter
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
@@ -47,7 +48,9 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.core.widget.doAfterTextChanged
 import com.kana_tutor.sqlltdemo.databinding.ActivityMainBinding
 import com.kana_tutor.utils.copyFileFromAssets
+import com.kana_tutor.utils.searchwindow.SearchWindow
 import java.io.File
+import java.lang.StringBuilder
 
 
 data class CustomerModel(
@@ -146,39 +149,29 @@ class DbHelper(
     }
     private fun getCustomersFromSql(sqlQuery:String) : MutableList<CustomerModel> {
         val rv: MutableList<CustomerModel>
-        try {
-            val cursor = readableDatabase.rawQuery(sqlQuery, null)
-            rv = (0 until cursor.count).map {
-                cursor.moveToPosition(it)
-                CustomerModel(
-                    cursor.getInt(0),
-                    cursor.getString(1),
-                    cursor.getInt(2),
-                    cursor.getInt(3) == 1
-                )
-            }.toMutableList()
-        }
-        catch (e: SQLiteException) {
-            val asList = e.message?.split("\n")?.toList()
-                ?: listOf("unknown")
-            val errors = asList.filter { "^(Error Code|Caused By)".toRegex(RegexOption.IGNORE_CASE).find(it) != null }
-            throw SQLiteException("""SQLiteOpenHelper:onCreate:
-                |${errors.joinToString("\n")}
-                |""".trimMargin("|"))
-        }
+        val cursor = readableDatabase.rawQuery(sqlQuery, null)
+        rv = (0 until cursor.count).map {
+            cursor.moveToPosition(it)
+            CustomerModel(
+                cursor.getInt(0),
+                cursor.getString(1),
+                cursor.getInt(2),
+                cursor.getInt(3) == 1
+            )
+        }.toMutableList()
         return rv
     }
     fun getCustomersSimpleSearch(customerName: String
     ) : MutableList<CustomerModel> {
         val sqlQuery = """
-            |SELECT * from CUSTOMER_TABLE
-            |WHERE NAME LIKE '%$customerName%';""".trimMargin("|")
+            SELECT * from CUSTOMER_TABLE
+            WHERE NAME LIKE '%$customerName%';""".trimIndent()
         return getCustomersFromSql(sqlQuery)
     }
     fun getCustomers(sqlRegex:String) : MutableList<CustomerModel> {
         val sqlQuery = """
-            |SELECT * from CUSTOMER_TABLE
-            |WHERE $sqlRegex;
+            SELECT * from CUSTOMER_TABLE
+            WHERE $sqlRegex;
         """.trimIndent()
 
         return getCustomersFromSql(sqlQuery)
@@ -273,6 +266,39 @@ class MainActivity : AppCompatActivity() {
                     && DbHelper(this@MainActivity.applicationContext)
                     .getCustomer(name, ageString.toInt()) == null
         }
+        var searchWindow : SearchWindow? = null
+        var currentSearchType = 0
+        val SIMPLE_SEARCH = 0
+        val SQL_SEARCH = 1
+        fun setSearchWinHint() =
+            searchWindow?.searchET?.setHint(
+                if (currentSearchType == SQL_SEARCH) "Long press for help"
+                else "Simple Name Search"
+            )
+
+        val prefs = getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE)
+        var spinnerFirstRun = true
+        // String that determines search is simple or sql.  Set at startup in onCreate
+        // from user prefs.  Changed by user with customer_search_type_spinner spinner.
+        class SpinnerActivity : Activity(), AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                Log.d("Spinner Activity", "onItemSelected:%d:0x%08x".format(pos, id))
+                val newSelection = pos
+                if (!spinnerFirstRun && newSelection != currentSearchType) {
+                    prefs.edit().putInt("currentSearchType", newSelection).apply()
+                    currentSearchType = newSelection
+                    setSearchWinHint()
+                    Log.d("spinner update", "spinner val: $newSelection")
+                }
+                spinnerFirstRun = false
+                // An item was selected. You can retrieve the selected item using
+                // parent.getItemAtPosition(pos)
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                Log.d("Spinner Activity", "onNothingSelected")
+                // Another interface callback
+            }
+        }
 
         fun showSearchHelp() : Boolean {
             val webView = WebView(this)
@@ -297,7 +323,6 @@ class MainActivity : AppCompatActivity() {
         }
         val appHome = File(filesDir, "../")
         val databaseDir = File(appHome, "/databases")
-        val prefs = getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE)
         if (prefs.getLong("firstRunTimestamp", 0L) == 0L) {
             copyFileFromAssets(
                 "db/customer.sqlite",
@@ -309,6 +334,8 @@ class MainActivity : AppCompatActivity() {
             Log.d("onCreate", "copyFileFromAssets complete")
         }
         setContentView(binding.root)
+        currentSearchType = prefs.getInt("currentSearchType", 0)
+        Log.d("startup", "spinner val: $currentSearchType")
         run {
             Log.d("onCreate", "Start db")
             val db = DbHelper(this@MainActivity.applicationContext)
@@ -318,16 +345,33 @@ class MainActivity : AppCompatActivity() {
         enableButtons()
         with(binding) {
             // Search window callbacks.
+            searchWindow = customerSearch
             customerSearch.setSearchOnClick{view : View, textIn : String ->
                 Log.d("name search", "setSearchOnClick text = \"$textIn")
+                var selectedCustomers : MutableList<CustomerModel>? = null
+                try {
+                    val db = DbHelper(this@MainActivity.applicationContext)
+                    val sqlSearch = currentSearchType == SQL_SEARCH
+                    selectedCustomers =
+                        if (sqlSearch) db.getCustomers(textIn)
+                        else db.getCustomersSimpleSearch(textIn)
+                    db.close()
+                }
+                catch (e: SQLiteException) {
+                    val errorsList = e.message?.split("\n")!!.toList()
+                    var i = 0
+                    val sqlError = StringBuilder("SqlError: ")
+                    while (i < errorsList.size && !errorsList[i].startsWith("#")) {
+                        sqlError.append(errorsList[i]).append("\n")
+                        i++
+                    }
+                    Toast.makeText(
+                        this@MainActivity.applicationContext,
+                        sqlError.toString(), Toast.LENGTH_LONG)
+                        .show()
+                }
 
-                val db = DbHelper(this@MainActivity.applicationContext)
-                /* val selectedCustomers = db.getCustomers(
-                    "(NAME like 'M%' OR NAME like '%a') AND NOT AGE > 30")
-                 */
-                val selectedCustomers = db.getCustomersSimpleSearch(textIn)
-                db.close()
-                selectedCustomers.updateListView()
+                selectedCustomers?.updateListView()
             }
             customerSearch.searchET.setOnLongClickListener {
                 Log.d("onlongclick", "clicked")
@@ -337,6 +381,18 @@ class MainActivity : AppCompatActivity() {
             customerSearch.setSearchOnTouch { view: View, textIn: String ->
                 Log.d("name search", "setSearchOnTouch text = \"$textIn")
             }
+            val spinAdapter = ArrayAdapter<String>(
+                this@MainActivity.applicationContext, R.layout.tv,
+                resources.getStringArray(R.array.search_types)
+            )
+            spinAdapter.setDropDownViewResource(R.layout.tv)
+            customerSearchTypeSpinner.adapter = spinAdapter
+            customerSearchTypeSpinner.onItemSelectedListener =
+                SpinnerActivity()
+            // Set the initial value shown in the selector HERE!.
+            // This must be after adapter is set.
+            customerSearchTypeSpinner.setSelection(currentSearchType)
+            setSearchWinHint()
             // name/age edit text to listeners so they check input on each
             // key touch and update enable/disable for buttons.
             customerNameEt.doAfterTextChanged  { enableButtons() }

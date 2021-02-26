@@ -40,6 +40,16 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="Autofill" />
 
+    <Spinner
+        android:id="@+id/customer_search_type_spinner"
+        android:entries="@array/search_types"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/customer_search"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
     <EditText
         android:id="@+id/customer_name_et"
         android:enabled="true"
@@ -53,7 +63,7 @@
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/customer_search"
+        app:layout_constraintTop_toBottomOf="@id/customer_search_type_spinner"
         />
 
     <EditText
