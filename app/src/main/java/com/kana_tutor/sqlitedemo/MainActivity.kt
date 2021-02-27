@@ -277,20 +277,16 @@ class MainActivity : AppCompatActivity() {
             )
 
         val prefs = getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE)
-        var spinnerFirstRun = true
         // String that determines search is simple or sql.  Set at startup in onCreate
         // from user prefs.  Changed by user with customer_search_type_spinner spinner.
         class SpinnerActivity : Activity(), AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
                 Log.d("Spinner Activity", "onItemSelected:%d:0x%08x".format(pos, id))
                 val newSelection = pos
-                if (!spinnerFirstRun && newSelection != currentSearchType) {
-                    prefs.edit().putInt("currentSearchType", newSelection).apply()
-                    currentSearchType = newSelection
-                    setSearchWinHint()
-                    Log.d("spinner update", "spinner val: $newSelection")
-                }
-                spinnerFirstRun = false
+                prefs.edit().putInt("currentSearchType", newSelection).apply()
+                currentSearchType = newSelection
+                setSearchWinHint()
+                Log.d("spinner update", "spinner val: $newSelection")
                 // An item was selected. You can retrieve the selected item using
                 // parent.getItemAtPosition(pos)
             }
