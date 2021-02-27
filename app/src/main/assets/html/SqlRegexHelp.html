@@ -21,22 +21,79 @@
             h3 { font-size:14px; }
         </style>
     </head>
-<body>
-<p>For a discussion of
-<a href="https://www.sqlite.org/lang_expr.html">
-SQLite's version of syntax, please visit
-</a>.
-<p>This app supports some SQL regular expressions and also allows you
-to select integers.
-<ul>
-    <li>You can search on two values: NAME which is a String and AGE which is
-    an Int.</li>
-    <li>Boolean: AND, OR, NOT: conditions can be connected using these values.
-    For example, "NOT AGE = 30" will find all cards for which the customer's
-    age is not 30.  These operators do have a precedence of evaluation, so
-    use parentheses '()' if you have any doubt.</li>
-</ul>
-
-</body>
+    <body>
+        <p>For a discussion of
+        <a href="https://www.sqlite.org/lang_expr.html">
+        SQLite's version of syntax, please visit
+        </a>.
+        <p>This app supports some SQL regular expressions and also allows you
+        to select integers.
+        <ul>
+            <li>You can search on two values: NAME which is a String and AGE which is
+            an Int.</li>
+            <li>Boolean: AND, OR, NOT: conditions can be connected using these values.
+            For example, "NOT AGE = 30" will find all cards for which the customer's
+            age is not 30.  These operators do have a precedence of evaluation, so
+            use parentheses '()' if you have any doubt.</li>
+            <li>ESCAPE: This clause allows you to say the next character is not a meta-character
+            used for the search.  To say that the dollar sign ($) is an escape character
+            you would say "ESCAPE '$'"</li>
+            <li>GLOB and LIKE: Both of these operators support regex-like expressions.
+                Hopefully they will do what is needed.  REGEXP and MATCH are "application-defined"
+                functions.
+                <ul>
+                    <li>LIKE:  LIKE supports two meta characters:"%" and "_"</li>
+                    <ul>
+                        <li>%: A percent symbol ("%") in the LIKE pattern matches any
+                            sequence of zero or more characters.</li>
+                        <li>An underscore ("_") in the LIKE pattern matches any single character.</li>
+                    </ul>
+                    <li>GLOB: Like "LIKE" but with unix style wild cards:
+                        <ul>
+                            <li>*: 0 or more of any character</li>
+                            <li>?: 1 of any character.</li>
+                            <li>[a-n]: any character between a and n inclusive.</li>
+                            <li>[a,Z]: an 'a' or a 'Z'.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li>EXAMPLES:<br>
+                <B>NOTE:</b> (') is significant.  'xyz' denotes s string containing xyz.  Also, you can
+                turn on case using a pragma, but the examples below are case-insensitive.'
+                <ul>
+                    <li>first character of name is a 'j':<br>
+                        NAME LIKE 'j%'
+                    </li>
+                    <li>Int fields are cast to strings for this test so to find any
+                    customer with a '2' in their age, you can use:<br>
+                    AGE LIKE '%2%'</li>
+                    <li>first character of name is a 'j' and last is e:<br>
+                        NAME LIKE 'j%e'
+                    </li>
+                    <li>first character of name is a 'j' and contains an e:<br>
+                        NAME LIKE 'j%e%'
+                    </li>
+                    <li>first character of name is a 'j' and name does not contain an 's':<br>
+                        NAME LIKE 'j%e%' AND NOT NAME LIKE '%s%'
+                    </li>
+                    <li>Name contains a '%'.  Use '#' to excape the '%' meta-char.<br>
+                        NAME LIKE '%#%%' ESCAPE '%'
+                    </li>
+                    <li>Name starts with a lower-case 'j':<br>
+                        NAME GLOB 'j*'
+                    </li>
+                    <li>Name starts with a upper-case 'J':<br>
+                        NAME GLOB 'J*'
+                    </li>
+                    <li>Name starts with a 'j' or a 'J':<br>
+                    NAME GLOB '[Jj]*'
+                    </li>
+                </ul >
+            </li>
+        </ul>
+        This is only some of what you can do with sql selecton.  I found
+        <a href="https://www.tutlane.com/tutorial/sqlite">Tulane's tutorial</a>
+        very useful.
+    </body>
 </html>
-<!-- vim: set foldmethod=manual : -->
