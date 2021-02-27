@@ -34,8 +34,6 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.MotionEvent.ACTION_DOWN
-import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.webkit.WebView
@@ -43,8 +41,6 @@ import android.webkit.WebViewClient
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
 import androidx.core.widget.doAfterTextChanged
 import com.kana_tutor.sqlltdemo.databinding.ActivityMainBinding
 import com.kana_tutor.utils.copyFileFromAssets
@@ -159,6 +155,7 @@ class DbHelper(
                 cursor.getInt(3) == 1
             )
         }.toMutableList()
+        cursor.close()
         return rv
     }
     fun getCustomersSimpleSearch(customerName: String
@@ -230,8 +227,8 @@ fun Activity.webViewAlert (webView : WebView, title:String) {
     androidx.appcompat.app.AlertDialog.Builder(this)
         .setTitle(title)
         .setView(webView)
-        .setNegativeButton(R.string.done,
-            {dialogInterface, _ -> dialogInterface.dismiss()})
+        .setNegativeButton(R.string.done
+        ) { dialogInterface, _ -> dialogInterface.dismiss() }
         .setCancelable(false)
         .show()
 }
@@ -268,27 +265,28 @@ class MainActivity : AppCompatActivity() {
         }
         var searchWindow : SearchWindow? = null
         var currentSearchType = 0
+        @Suppress("unused")
         val SIMPLE_SEARCH = 0
         val SQL_SEARCH = 1
-        fun setSearchWinHint() =
-            searchWindow?.searchET?.setHint(
+        fun setSearchWinHint(): Unit? {
+            return searchWindow?.searchET?.setHint(
                 if (currentSearchType == SQL_SEARCH) "Long press for help"
                 else "Simple Name Search"
             )
+        }
 
         val prefs = getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE)
         // String that determines search is simple or sql.  Set at startup in onCreate
         // from user prefs.  Changed by user with customer_search_type_spinner spinner.
         class SpinnerActivity : Activity(), AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-                Log.d("Spinner Activity", "onItemSelected:%d:0x%08x".format(pos, id))
-                val newSelection = pos
-                prefs.edit().putInt("currentSearchType", newSelection).apply()
-                currentSearchType = newSelection
-                setSearchWinHint()
-                Log.d("spinner update", "spinner val: $newSelection")
                 // An item was selected. You can retrieve the selected item using
                 // parent.getItemAtPosition(pos)
+                Log.d("Spinner Activity", "onItemSelected:%d:0x%08x".format(pos, id))
+                prefs.edit().putInt("currentSearchType", pos).apply()
+                currentSearchType = pos
+                setSearchWinHint()
+                Log.d("spinner update", "spinner position: $pos")
             }
             override fun onNothingSelected(parent: AdapterView<*>) {
                 Log.d("Spinner Activity", "onNothingSelected")
@@ -326,7 +324,7 @@ class MainActivity : AppCompatActivity() {
                 true)
             prefs.edit()
                 .putLong("firstRunTimestamp", System.currentTimeMillis())
-                .commit()
+                .apply()
             Log.d("onCreate", "copyFileFromAssets complete")
         }
         setContentView(binding.root)
@@ -342,7 +340,7 @@ class MainActivity : AppCompatActivity() {
         with(binding) {
             // Search window callbacks.
             searchWindow = customerSearch
-            customerSearch.setSearchOnClick{view : View, textIn : String ->
+            customerSearch.setSearchOnClick{_ : View, textIn : String ->
                 Log.d("name search", "setSearchOnClick text = \"$textIn")
                 var selectedCustomers : MutableList<CustomerModel>? = null
                 try {
@@ -370,14 +368,13 @@ class MainActivity : AppCompatActivity() {
                 selectedCustomers?.updateListView()
             }
             customerSearch.searchET.setOnLongClickListener {
-                Log.d("onlongclick", "clicked")
                 showSearchHelp()
                 true
             }
             customerSearch.setSearchOnTouch { view: View, textIn: String ->
                 Log.d("name search", "setSearchOnTouch text = \"$textIn")
             }
-            val spinAdapter = ArrayAdapter<String>(
+            val spinAdapter = ArrayAdapter(
                 this@MainActivity.applicationContext, R.layout.tv,
                 resources.getStringArray(R.array.search_types)
             )
