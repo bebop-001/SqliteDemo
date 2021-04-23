@@ -1,5 +1,4 @@
 *.sw*
-SqliteConsoleDemo.iml
 out/
 test.db
 
