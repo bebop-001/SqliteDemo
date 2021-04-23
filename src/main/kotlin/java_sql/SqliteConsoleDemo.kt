@@ -1,3 +1,20 @@
+/*
+ * Copyright 2021 Steven Smith kana-tutor.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package java_sql
+
 import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
@@ -20,7 +37,7 @@ class SqliteConsoleDemo {
     }
 
     companion object {
-        private val employeeTable = mutableListOf(
+        private val employeeTable = listOf(
             EmployeeInfo (1, "Paul", 32, "California", 20000.00f ),
             EmployeeInfo (2, "Allen", 25, "Texas", 15000.00f ),
             EmployeeInfo (3, "Teddy", 23, "Norway", 20000.00f ),
@@ -66,10 +83,12 @@ class SqliteConsoleDemo {
             val empTable = mutableListOf<EmployeeInfo>()
             while (rs.next()) {
                 with (rs) {
-                    empTable.add(EmployeeInfo(
+                    empTable.add(
+                        EmployeeInfo(
                         getInt("ID"), getString("NAME"), getInt("AGE"),
                         getString("ADDRESS"), getString("SALARY").toFloat()
-                    ))
+                    )
+                    )
                 }
             }
             empTable.forEach{e->
