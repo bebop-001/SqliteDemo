@@ -15,6 +15,7 @@
 // copied from https://github.com/JetBrains/Exposed/wiki/Getting-Started
 // changed driver and transaction to support sqlite and connection
 // to create a db file.
+package exposed_sql
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
@@ -40,8 +41,8 @@ object ExposedDaoTest {
         var name by Cities.name
     }
 
-    fun mkDir(dir: File): File {
-        var dirs = dir.toString().split("/")
+    private fun mkDir(dir: File): File {
+        val dirs = dir.toString().split("/")
             .filter { it.isNotEmpty() }
             .toMutableList()
         while (dirs.isNotEmpty()) {

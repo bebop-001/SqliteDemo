@@ -15,6 +15,7 @@
 // copied from https://github.com/JetBrains/Exposed/wiki/Getting-Started
 // changed driver and transaction to support sqlite and connection
 // to create a db file.
+package exposed_sql
 
 import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
@@ -28,8 +29,8 @@ object ExposedDslTest {
         val name = varchar("name", 50)
     }
 
-    fun mkDir(dir: File): File {
-        var dirs = dir.toString().split("/")
+    private fun mkDir(dir: File): File {
+        val dirs = dir.toString().split("/")
             .filter { it.isNotEmpty() }
             .toMutableList()
         while (dirs.isNotEmpty()) {
@@ -57,7 +58,7 @@ object ExposedDslTest {
             SchemaUtils.create(Cities)
 
             // insert new city. SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg')
-            val stPeteId = Cities.insert {
+            Cities.insert {
                 it[name] = "St. Petersburg"
             } get Cities.id
 
