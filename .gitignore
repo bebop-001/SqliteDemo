@@ -1,4 +1,8 @@
 *.sw*
 out/
 test.db
+*.sqlite
+t
+t[0-9]
+err
 
