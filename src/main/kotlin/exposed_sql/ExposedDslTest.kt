@@ -26,6 +26,7 @@ import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
+import java.lang.RuntimeException
 import java.sql.Connection
 
 object Cities: IntIdTable() {
@@ -37,21 +38,22 @@ class City(id: EntityID<Int>) : IntEntity(id) {
 
     var name by Cities.name
 }
+fun mkDir(dir: File) : File {
+    var dirs = dir.toString().split("/")
+        .filter{it.isNotEmpty()}
+        .toMutableList()
+    while(dirs.isNotEmpty()) {
+        val d = File(dirs.removeAt(0))
+        if (!d.exists() && !d.mkdir())
+            throw RuntimeException("mkDir:mkdir($d) FAILED")
+    }
+    return dir
+}
 fun main(args: Array<String>) {
-    // creates /home/sjs/dev/Exposed/KotlinExposed/exposed.sqlite.mv.db
-    // Doesn't accept String "./exposed.sqlite" or "exposed.sqlite".
-    val dbFile = File("./exposed.sqlite")
-    // val dbFile = File("${System.getenv("PWD")}/exposed.sqlite")
-    println("PWD:${System.getenv("PWD")}, dbFile:$dbFile")
+    val dbDir = mkDir(File("${System.getenv("PWD")}/exposed_db"))
+    val dbFile = File(dbDir,"exposed_dsl.sqlite")
 
-    // h2 should be sqlite but doesn't crash.
-    // Generates: SQL: INSERT INTO CITIES ("NAME") VALUES ('St. Petersburg')
-    // Creates: $PWD/exposed.sqlite.mv.db
-    // Database.connect("jdbc:h2:$dbFile", driver = "org.sqlite.JDBC")
-
-    // crashes with SQLite supports only TRANSACTION_SERIALIZABLE and TRANSACTION_READ_UNCOMMITTED.
-    // creates 0 length $PWD/exposed.sqlite
-    Database.connect("jdbc:sqlite:./exposed.sqlite", driver = "org.sqlite.JDBC")
+    Database.connect("jdbc:sqlite:$dbFile", driver = "org.sqlite.JDBC")
 
     transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 3) {
             // print sql to std-out
