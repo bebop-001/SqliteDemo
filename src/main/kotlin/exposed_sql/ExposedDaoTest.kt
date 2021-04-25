@@ -16,16 +16,28 @@
 // changed driver and transaction to support sqlite and connection
 // to create a db file.
 
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.lang.RuntimeException
 import java.sql.Connection
 
-object ExposedDslTest {
+object ExposedDaoTest {
     object Cities : IntIdTable() {
         val name = varchar("name", 50)
+    }
+
+    class City(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<City>(Cities)
+
+        var name by Cities.name
     }
 
     fun mkDir(dir: File): File {
@@ -43,7 +55,7 @@ object ExposedDslTest {
     @JvmStatic
     fun main(args: Array<String>) {
         val dbDir = mkDir(File("${System.getenv("PWD")}/exposed_db"))
-        val dbFile = File(dbDir, "exposed_dsl.sqlite")
+        val dbFile = File(dbDir, "exposed_dao.sqlite")
 
         Database.connect("jdbc:sqlite:$dbFile", driver = "org.sqlite.JDBC")
 
@@ -55,14 +67,13 @@ object ExposedDslTest {
             addLogger(StdOutSqlLogger)
 
             SchemaUtils.create(Cities)
-
             // insert new city. SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg')
-            val stPeteId = Cities.insert {
-                it[name] = "St. Petersburg"
-            } get Cities.id
+            City.new {
+                name = "St. Petersburg"
+            }
 
             // 'select *' SQL: SELECT Cities.id, Cities.name FROM Cities
-            println("Cities: ${Cities.selectAll()}")
+            println("Cities: ${City.all()}")
         }
     }
 }
