@@ -21,24 +21,11 @@ import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
-import java.lang.RuntimeException
 import java.sql.Connection
 
 object ExposedDslTest {
     object Cities : IntIdTable() {
         val name = varchar("name", 50)
-    }
-
-    private fun mkDir(dir: File): File {
-        val dirs = dir.toString().split("/")
-            .filter { it.isNotEmpty() }
-            .toMutableList()
-        while (dirs.isNotEmpty()) {
-            val d = File(dirs.removeAt(0))
-            if (!d.exists() && !d.mkdir())
-                throw RuntimeException("mkDir:mkdir($d) FAILED")
-        }
-        return dir
     }
 
     @JvmStatic

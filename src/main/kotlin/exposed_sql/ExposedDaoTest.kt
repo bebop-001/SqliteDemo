@@ -27,7 +27,6 @@ import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
-import java.lang.RuntimeException
 import java.sql.Connection
 
 object ExposedDaoTest {
@@ -39,18 +38,6 @@ object ExposedDaoTest {
         companion object : IntEntityClass<City>(Cities)
 
         var name by Cities.name
-    }
-
-    private fun mkDir(dir: File): File {
-        val dirs = dir.toString().split("/")
-            .filter { it.isNotEmpty() }
-            .toMutableList()
-        while (dirs.isNotEmpty()) {
-            val d = File(dirs.removeAt(0))
-            if (!d.exists() && !d.mkdir())
-                throw RuntimeException("mkDir:mkdir($d) FAILED")
-        }
-        return dir
     }
 
     @JvmStatic
