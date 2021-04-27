@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package java_sql
+package exposed_sql
 
+import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
+import java.lang.RuntimeException
+import java.lang.System.getenv
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 
-class SqliteConsoleDemo {
+class ExposedSqliteDemo {
     data class EmployeeInfo (
         val id:Int,
         var name:String,
@@ -28,6 +33,7 @@ class SqliteConsoleDemo {
         var address:String,
         var salary:Float
     ) {
+
         private val salString:String
             get() = "%.2f".format(salary)
         override fun toString() : String =
@@ -35,8 +41,11 @@ class SqliteConsoleDemo {
                 VALUES ($id, '$name', $age, '$address', $salString)
         """.trimMargin()
     }
+    
 
     companion object {
+        val DB_DIR = File("${getenv("PWD")}/databases")
+        val DB_FILE = File("$$DB_DIR/${javaClass.packageName}.sqlite")
         private val employeeTable = listOf(
             EmployeeInfo (1, "Paul", 32, "California", 20000.00f ),
             EmployeeInfo (2, "Allen", 25, "Texas", 15000.00f ),
@@ -44,25 +53,31 @@ class SqliteConsoleDemo {
             EmployeeInfo (4, "Mark", 25, "Rich-Mond ", 65000.00f ),
         )
 
-        private const val dbFileName = "test.db"
-        private val dbConnection:Connection
-            get() = DriverManager.getConnection("jdbc:sqlite:$dbFileName")
-
+        private val dbConnection: Database
+            get() = Database.connect(
+                "jdbc:sqlite:$DB_FILE:test",
+                driver = "org.sqlite.JDBC",
+                // password = "password"
+            )
+        object EmployeeTable : IntIdTable() {
+            val empId = integer("ID").uniqueIndex()
+            val empName = stringLiteral("NAME")
+            val empAddress = stringLiteral("ADDRESS")
+            val empSalary = float("SALARY")
+        }
+        object StarWarsFilms : IntIdTable("hello") {
+            val sequelId = integer("sequel_id").uniqueIndex()
+            val name = varchar("name", 50)
+            val director = varchar("director", 50)
+        }
         private fun createTable() {
             val c = dbConnection
-            val stmt = c.createStatement()
-            val sql = """
-                CREATE TABLE IF NOT EXISTS COMPANY (
-                    ID INT PRIMARY KEY     NOT NULL,
-                    NAME           TEXT    NOT NULL,
-                    AGE            INT     NOT NULL,
-                    ADDRESS        CHAR(50),
-                    SALARY         REAL
-                )""".trimMargin()
-            stmt.executeUpdate(sql)
-            stmt.close()
-            c.close()
+            transaction {
+                // addLogger(StdOutSqlLogger)
+                SchemaUtils.create(StarWarsFilms)
+            }
         }
+        /*
         private fun addEmployees(table:List<EmployeeInfo>) {
             val c = dbConnection
             val stmt = c.createStatement()
@@ -141,18 +156,31 @@ class SqliteConsoleDemo {
             stmt.close()
             c.close()
         }
+        
+         */
+        fun mkDirs(dir:File) {
+            val dirs = dir.toString().split("/").filter{it.isNotEmpty()}.toMutableList()
+            var root = File("/" + dirs.removeAt(0))
+            while(dirs.size > 0) {
+                root = File(root, dirs.removeAt(0))
+                if (!root.exists() && !root.mkdir())
+                    throw RuntimeException("mkDirs: create $root FAILED")
+            }
+        }
         @JvmStatic
         fun main(args: Array<String>) {
-            val theDb = File(dbFileName)
-            if (theDb.exists()) {
-                println("removed current db:$dbFileName")
-                theDb.delete()
+            mkDirs(DB_DIR)
+            if (DB_FILE.exists()) {
+                println("removed current db:$DB_FILE")
+                DB_FILE.delete()
             }
             createTable()
+            /*
             addEmployees(employeeTable)
             printResults()
             annualEmployeeReview()
             layoff("Texas")
+            */
         }
     }
 }
