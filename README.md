@@ -19,3 +19,8 @@ The java sql driver was downloaded from Maven:<br>
   org.xerial:sqlite-jdbc:3.34.0
   
 
+Tue Apr 27 11:29:24 PDT 2021<br>
+added some simple demo stuff using IntelliJ's Exposed 
+SQL Framework.  There are two simple demos:one using DSL
+and the other using the DAO model.  They are using
+Sqlite.
